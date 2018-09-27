@@ -9,9 +9,10 @@ use Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory as ItemCollec
 use Magento\Customer\Model\Session;
 use Magento\Sales\Model\Order\Config as OrderConfig;
 use Magento\Catalog\Model\ProductFactory;
-use TPB\QuickReorder\Model\Config;
 use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable;
 use Magento\Framework\View\Element\Template;
+use Magento\Theme\Block\Html\Pager;
+use TPB\QuickReorder\Model\Config;
 
 /**
  * Customer Quick Reorder block
@@ -103,24 +104,24 @@ class QuickReorder extends Template
         foreach ($_orders as $_order) {
             $_orderids[] = $_order->getId();
         }
-		$collection = $this->itemCollectionFactory->create();
+        $collection = $this->itemCollectionFactory->create();
         if (!empty($product_name)) {
-			$collection->addFieldToFilter(
+            $collection->addFieldToFilter(
                 array('name', 'sku'),
                 array(
                     array('like'=>'%'.$product_name.'%'),
                     array('like'=>'%'.$product_name.'%')
                 )
             );
-		}
+        }
         $collection->addFieldToFilter('order_id', ['in' => $_orderids])
-                    ->addFieldToFilter('product_type', 'simple')
-                    ->getSelect()
-                    ->join(array('stock' => 'cataloginventory_stock_status'), 'main_table.product_id = stock.product_id', 'stock.stock_status')
-                    ->where('stock.stock_status = 1')
-                    ->columns('SUM(qty_ordered) as total_qty')
-                    ->group('main_table.product_id')
-                    ->order(array('total_qty DESC', 'name ASC'));
+                   ->addFieldToFilter('product_type', 'simple')
+                   ->getSelect()
+                   ->join(array('stock' => 'cataloginventory_stock_status'), 'main_table.product_id = stock.product_id', 'stock.stock_status')
+                   ->where('stock.stock_status = 1')
+                   ->columns('SUM(qty_ordered) as total_qty')
+                   ->group('main_table.product_id')
+                   ->order(array('total_qty DESC', 'name ASC'));
         $this->setCollection($collection);
     }
 
@@ -165,8 +166,7 @@ class QuickReorder extends Template
         parent::_prepareLayout();
         if ($this->getCollection()) {
             $pager = $this->getLayout()->createBlock(
-                \Magento\Theme\Block\Html\Pager::class,
-                'quick.reorder.pager'
+                Pager::class, 'quick.reorder.pager'
             )->setAvailableLimit(array($this->config->getListperpage() => $this->config->getListperpage()))
             ->setCollection(
                 $this->getCollection()
@@ -207,8 +207,8 @@ class QuickReorder extends Template
         $parentId = '';
         $parentByChild = $this->productTypeConfigurable->getParentIdsByChild($id);
         if (isset($parentByChild[0])) {
-            $parentId = $parentByChild[0];          
+            $parentId = $parentByChild[0];
         }
-        return $parentId;     
+        return $parentId;
     }
 }
