@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+
+<layout xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/layout_generic.xsd">
+    <container name="root" label="Root">
+        <block class="TPB\Accessories\Block\Adminhtml\Catalog\Product\Edit\Tab\Accessories"
+               name="catalog.product.edit.tab.accessories"/>
+        <block class="Magento\Backend\Block\Widget\Grid\Serializer" name="accessories_grid_serializer">
+            <arguments>
+                <argument name="input_names" xsi:type="string">position</argument>
+                <argument name="grid_block" xsi:type="string">catalog.product.edit.tab.accessories</argument>
+                <argument name="callback" xsi:type="string">getSelectedAccessoriesProducts</argument>
+                <argument name="input_element_name" xsi:type="string">links[accessories]</argument>
+                <argument name="reload_param_name" xsi:type="string">products_accessories</argument>
+            </arguments>
+        </block>
+    </container>
+</layout>

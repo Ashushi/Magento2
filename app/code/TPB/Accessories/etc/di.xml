@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+
+    <preference for="Magento\Catalog\Model\Product"
+                type="TPB\Accessories\Model\Product"/>
+    <preference for="Magento\Catalog\Model\Product\Link"
+                type="TPB\Accessories\Model\Catalog\Product\Link"/>
+    <preference for="Magento\Catalog\Model\Product\Link\Proxy"
+                type="TPB\Accessories\Model\Catalog\Product\Link\Proxy"/>
+
+    <type name="Magento\Catalog\Model\Product\Initialization\Helper\ProductLinks">
+        <plugin sortOrder="4" name="afterInitializeLinks"
+                type="TPB\Accessories\Model\Product\Initialization\Helper\ProductLinks"/>
+    </type>
+
+    <!--For version 2.1.2-->
+    <preference for="Magento\Catalog\Ui\DataProvider\Product\Form\Modifier\Related"
+                type="TPB\Accessories\Ui\DataProvider\Product\Form\Modifier\Related"/>
+
+    <type name="Magento\Catalog\Model\Product\LinkTypeProvider">
+        <arguments>
+            <argument name="linkTypes" xsi:type="array">
+                <item name="accessories" xsi:type="const">TPB\Accessories\Model\Catalog\Product\Link::LINK_TYPE_ACCESSORIES</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Catalog\Model\ProductLink\CollectionProvider">
+        <arguments>
+            <argument name="providers" xsi:type="array">
+                <item name="accessories" xsi:type="object">TPB\Accessories\Model\Product\Link\CollectionProvider\Accessories</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

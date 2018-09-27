@@ -1,0 +1,112 @@
+<?php /** @var $block \TPB\QuickReorder\Block\QuickReorder */ ?>
+<?php
+$items = $block->getCollection();
+$imageHelper = $this->helper('Magento\Catalog\Helper\Image');
+$cartUrl = $block->getUrl('checkout/cart', ['_secure' => true]);
+?>
+<div class="reorder-item-selected">
+	<span id="number-selected" style="font-weight: bold">0</span>&nbsp;<?php /* @escapeNotVerified */ echo __('Selected Product(s)') ?>
+</div>
+<div class="row-fluid">
+    <div class="buttons-reorder">
+        <button type="button" id="add-all-to-cart-reorder" class="btn" data-url="<?php /* @escapeNotVerified */ echo $block->getUrl('quick-reorder/cart/add/'); ?>"><?php /* @escapeNotVerified */ echo __('Add to Cart') ?></button>
+        <button type="button" class="btn" onclick="location.href = '<?php /* @escapeNotVerified */ echo $cartUrl ?>'">View Cart</button>
+        <button type="button" class="btn" id="deselect-all-reorder">Deselect All</button>
+    </div>
+    <div class="search-reorder">
+        <button type="button" title="clear" class="btn" id="clearbtn-reorder">Clear</button>
+        <button type="button" title="search" class="btn" id="searchbtn-reorder">Search</button>
+        <input id="searchbox-reorder" value="" maxlength="128" type="text" placeholder="<?php /* @escapeNotVerified */ echo __('Seach item here...') ?>" />
+    </div>
+</div>
+<div id="reoderproduct-content">
+    <?php if ($block->getPagerHtml()): ?>
+        <div class="order-products-toolbar toolbar bottom"><?= $block->getPagerHtml() ?></div>
+    <?php endif ?>
+    <form action="" method="post" id="list-reoderproduct" data-hasrequired="<?php /* @escapeNotVerified */ echo __('* Required Fields') ?>" data-mage-init='{"validation":{}}'>
+        <div class="list-reoderproduct" style="overflow-x:auto;">
+            <table id="reorder_product" class="display table table-striped" cellspacing="0" width="100%">
+                <thead>
+                    <tr>
+                        <th style="width:10%;"><input type="checkbox" name="item[]" value="all" id="reorder-select-all"></th>
+                        <th style="width:20%;"><?php /* @escapeNotVerified */ echo __('Image')?></th>
+                        <th style="width:30%;"><?php /* @escapeNotVerified */ echo __('Product Name') ?></th>
+                        <th style="width:15%;"><?php /* @escapeNotVerified */ echo __('Ordered Price') ?></th>
+                        <th style="width:15%;"><?php /* @escapeNotVerified */ echo __('Ordered Qty') ?></th>
+                        <th style="width:10%;"><?php /* @escapeNotVerified */ echo __('Qty') ?></th>
+                    </tr>
+                </thead>
+                <tbody>
+            <?php if ($items->getSize()) {
+                    foreach ($items as $item) {
+                        $productId = $item->getProductId();
+                        $_product = $block->getProductById($productId);
+                        $parentId = $block->getParentId($productId);
+                        if ($parentId) {
+                            $_parent = $block->getProductById($parentId);
+                            $productUrl = $_parent->getProductUrl();
+                        } else {
+                            $productUrl = $_product->getProductUrl();
+                        }
+                        ?>
+                        <tr>
+                            <td>
+                                <input type="checkbox" name="item[]" id="item_<?php /* @escapeNotVerified */ echo $productId; ?>" value="<?php /* @escapeNotVerified */ echo $productId; ?>" class="reorder-select-item">
+                                <input type="hidden" id="parent_<?php /* @escapeNotVerified */ echo $productId ;?>" name="parent_<?php /* @escapeNotVerified */ echo $productId ;?>" value="<?php /* @escapeNotVerified */ echo $parentId; ?>">
+                            </td>
+                            <td>
+                                <div class="image-reoderproduct">
+                                    <img class="thumbnail" src="<?php /* @escapeNotVerified */ echo $imageHelper->init($_product, 'category_page_list', array('height' => 100 , 'width'=> 100))->getUrl();?>" alt="<?php /* @escapeNotVerified */ echo $block->stripTags($block->getImageLabel($_product, 'small_image'), null, true) ?>" title="<?php /* @escapeNotVerified */ echo $_product->getName(); ?>" />
+                                </div>
+                            </td>
+                            <td>
+                                <p class="product-name"><span><a href="<?php echo $productUrl;?>" ><?php /* @escapeNotVerified */ echo $_product->getName(); ?></a></span></p>
+                                <p><span><?php /* @escapeNotVerified */ echo $_product->getSku(); ?></span></p>
+                            </td>
+                            <td>
+                                <?php echo $this->helper('Magento\Framework\Pricing\Helper\Data')->currency($_product->getPrice(),true, false);
+                                ?>
+                            </td>
+                            <td class="qtyordered-reorder">
+                                <?php /* @escapeNotVerified */ echo (int)$item->getTotalQty();?>
+                            </td>
+                            <td class="qty-reorder">
+                                <input type="text" id="qty_<?php /* @escapeNotVerified */ echo $productId ;?>" name="qty_<?php /* @escapeNotVerified */ echo $productId ;?>" value="1" class="qty-reoderproduct">
+                            </td>
+                        </tr>
+                    <?php
+                    }
+                } else { ?>
+					<tr>
+						<td colspan="6">No Record Found</td>
+					</tr>
+				<?php } ?>
+                </tbody>
+            </table>
+        </div>
+    </form>
+</div>
+<div id="reorder_overlay" class="reorder_overlay">
+    <div class="loader">
+        <img src="<?php echo $block->getViewFileUrl('images/loader-1.gif'); ?>" alt="Loading...">
+    </div>
+</div>
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "reorder": {
+                "reorderContent": "#reoderproduct-content",
+                "productCheckbox": ".reorder-select-item",
+                "productQty": ".qty-reoderproduct",
+                "selectAllCheckbox": "#reorder-select-all",
+                "numberSelected": "#number-selected",
+                "addToCart": "#add-all-to-cart-reorder",
+                "deselectAll": "#deselect-all-reorder",
+                "searchBox": "#searchbox-reorder",
+                "searchReorder": "#searchbtn-reorder",
+                "clearReorder": "#clearbtn-reorder",
+                "loader": "#reorder_overlay"
+            }
+        }
+    }
+</script>

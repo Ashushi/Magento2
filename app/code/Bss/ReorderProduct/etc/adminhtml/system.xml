@@ -1,0 +1,92 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * BSS Commerce Co.
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the EULA
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://bsscommerce.com/Bss-Commerce-License.txt
+ *
+ * @category   BSS
+ * @package    Bss_ReorderProduct
+ * @author     Extension Team
+ * @copyright  Copyright (c) 2017-2018 BSS Commerce Co. ( http://bsscommerce.com )
+ * @license    http://bsscommerce.com/Bss-Commerce-License.txt
+*/
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <tab id="bss" translate="label" sortOrder="300">
+            <label>Bss Commerce</label>
+        </tab>
+        <section id="reorderproduct" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
+            <label>Reorder Product</label>
+            <tab>bss</tab>
+            <resource>Bss_ReorderProduct::config</resource>
+            <group id="general" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>General Options</label>
+                <field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Choose 'Yes' to enable module.<br>Version 1.0.6]]></comment>
+                </field>
+                <field id="redirect_cart" translate="label" type="select" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Redirect to Cart after Adding Products to Cart</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Redirect to cart after add product to cart.]]></comment>
+                </field>
+                <field id="redirect_wishlist" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Redirect to Wishlist after Adding Products to Wishlist</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Redirect to wishlist after add product to wishlist.]]></comment>
+                </field>
+            </group>
+            <group id="list_reoderproduct" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                <label>List</label>
+                 <field id="btnwishlist" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Enable to Add All Products to Wishlist</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="show_columns" translate="label" type="multiselect" sortOrder="2" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Default Column(s) Displayed</label>
+                    <source_model>Bss\ReorderProduct\Model\Config\Source\DisplayColumns</source_model>
+                </field>
+                <field id="show_quickview" translate="label" type="select" sortOrder="3" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Show Quick View Button in Column</label>
+                    <source_model>Bss\ReorderProduct\Model\Config\Source\QuickView</source_model>
+                </field>
+                
+                <field id="qty_inventory" translate="label" type="select" sortOrder="4" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Show Quantity</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="show_sku" translate="label" type="select" sortOrder="5" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Show SKU</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="list_per_page_values" translate="label comment" type="text" sortOrder="6" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Products per Page on List Allowed Values</label>
+                    <comment>Separated by commas.</comment>
+                    <validate>validate-per-page-value-list</validate>
+                </field>
+                <field id="list_per_page" translate="label comment" type="text" sortOrder="7" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Products per Page on List Default Values</label>
+                    <comment>Must be in the allowed values list</comment>
+                    <validate>validate-per-page-value</validate>
+                </field>
+                <field id="sort_by" translate="label" type="select" sortOrder="8" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Products Listing Sort by</label>
+                    <source_model>Bss\ReorderProduct\Model\Config\Source\Sortoder</source_model>
+                </field>
+                <field id="list_allow_all" translate="label comment" type="select" sortOrder="9" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Allow Showing All Products per Page</label>
+                    <comment>Whether to show "All" option in the "Show X Per Page" dropdown</comment>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+            </group>    
+        </section>
+    </system>
+</config>

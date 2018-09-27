@@ -1,0 +1,266 @@
+<?php /** @var $block \Bss\ReorderProduct\Block\ReorderProduct */ ?>
+<?php
+$items = $this->getItems();
+$helper = $this->helper('Bss\ReorderProduct\Helper\Data');
+$imageHelper = $this->helper('Magento\Catalog\Helper\Image');
+$checked = [];
+?>
+<div class="search-reorder">
+	<input type="text" id="searchbox-reorder" placeholder="<?php /* @escapeNotVerified */ echo __('Seach item here...') ?>">
+</div>
+<div class="message info">
+<p class="note">
+	<span><?php /* @escapeNotVerified */ echo __('Use quick view function to check current price.')?></span>
+	<span><?php /* @escapeNotVerified */ echo ($helper->showbtnQuickview() == 'name')? __('(Click on product name to see current price.)') : __('(Click on quick view button on image to see current price.)') ?></span>
+</p>	
+</div>
+<a href="javascript:void(0)" id="show-hide-colum-reorder" title=""><?php /* @escapeNotVerified */ echo __('Show/Hide Column') ?></a>
+<div id="control_sh">
+	<p><input type="checkbox" value="" data-column="0"><span><?php /* @escapeNotVerified */ echo __('Checkbox') ?></span></p>
+	<p><input type="checkbox" value="" data-column="1"><span><?php /* @escapeNotVerified */ echo __('Image') ?></span></p>
+	<p><input type="checkbox" value="" data-column="2"><span><?php /* @escapeNotVerified */ echo __('Product Name') ?></span></p>
+	<p><input type="checkbox" value="" data-column="3"><span><?php /* @escapeNotVerified */ echo __('Ordered Price') ?></span></p>
+	<p><input type="checkbox" value="" data-column="4"><span><?php /* @escapeNotVerified */ echo __('Qty') ?></span></p>
+	<p><input type="checkbox" value="" data-column="5"><span><?php /* @escapeNotVerified */ echo __('Ordered Qty') ?></span></p>
+	<p><input type="checkbox" value="" data-column="6"><span><?php /* @escapeNotVerified */ echo __('Order Date') ?></span></p>
+	<p><input type="checkbox" value="" data-column="7"><span><?php /* @escapeNotVerified */ echo __('Stock Status') ?></span></p>
+	<p><input type="checkbox" value="" data-column="8"><span><?php /* @escapeNotVerified */ echo __('Add to Cart') ?></span></p>
+</div>
+<div class="reorder-item-selected-r">
+	<span class="number-selected" style="font-weight: bold">0</span>&nbsp;<?php /* @escapeNotVerified */ echo __('items selected') ?>
+</div>
+<form action="" method="post" id="list-reoderproduct" data-hasrequired="<?php /* @escapeNotVerified */ echo __('* Required Fields') ?>" data-mage-init='{"validation":{}}'>
+<div class="list-reoderproduct-d" style="overflow-x:auto;">
+<table id="reorder_product" class="display" cellspacing="0" width="100%">
+        <thead>
+            <tr>
+            	<th><input type="checkbox" name="item[]" value="all" id="reorder-select-all"></th>
+            	<th><?php /* @escapeNotVerified */ echo __('Image')?></th>
+                <th><?php /* @escapeNotVerified */ echo __('Product Name') ?></th>
+                <th><?php /* @escapeNotVerified */ echo __('Ordered Price') ?></th>
+                <th><?php /* @escapeNotVerified */ echo __('Qty') ?></th>
+                <th><?php /* @escapeNotVerified */ echo __('Ordered Qty') ?></th>
+                <th><?php /* @escapeNotVerified */ echo __('Order Date') ?></th>
+                <th><?php /* @escapeNotVerified */ echo __('Stock Status') ?></th>
+                <th><?php /* @escapeNotVerified */ echo __('Add to Cart') ?></th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($items as $item): ?>
+				<?php
+				$productId = $block->getProductId($item);
+				$_product = $block->getProductById($productId);
+	            $stockStatus = $block->getStock($productId);
+	            $status = $_product->getStatus();
+	            if ($item->getProductType() == 'configurable' && $block->getChildProduct($item) != null) {
+		            if ($block->getChildProduct($item) != null) {
+			            $_productChild = $block->getProductById($block->getChildProduct($item));
+			            $status_child = $_productChild->getStatus();
+			        	
+				        if ($status == 2 || $status_child == 2 || !$_productChild->getId()) {
+				        	$status = 2;
+				        }
+			        }
+		    	}
+            	$minSaleQty = $block->getMinSaleQty($item);
+				?>
+				<?php if ($_product->getId() && $status == 1): ?>
+					<?php $checked[] = $item->getId(); ?>
+					<tr>
+						<td>
+							<input type="checkbox" name="item[]" id="item_<?php /* @escapeNotVerified */ echo $item->getId(); ?>" value="<?php /* @escapeNotVerified */ echo $item->getId(); ?>" class="reorder-select-item">
+						</td>
+						<td>
+							<div class="image-reoderproduct">
+								<a href="<?php /* @escapeNotVerified */ echo $block->getMediaBaseUrl().'catalog/product'.$_product->getImage() ?>" data-lighter="<?php /* @escapeNotVerified */ echo $block->getMediaBaseUrl().'catalog/product'.$_product->getImage() ?>" title="<?php /* @escapeNotVerified */ echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" class="rp-product-image product-image-<?php /* @escapeNotVerified */ echo $_product->getId(); ?>">
+					                    <img id="product-collection-image-<?php /* @escapeNotVerified */ echo $_product->getId(); ?>" class="thumbnail"
+					                    src="<?php /* @escapeNotVerified */ echo $imageHelper->init($_product, 'category_page_list', array('height' => 240 , 'width'=> 240))->getUrl();?>"
+					                    alt="<?php /* @escapeNotVerified */ echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" title="<?php /* @escapeNotVerified */ echo $_product->getName(); ?>" />
+					            </a>
+					            <?php if ($helper->showbtnQuickview() == 'image' && $_product->isVisibleInSiteVisibility() ): ?>
+									<a class="reorder-quickview" data-quickview-url="<?php /* @escapeNotVerified */ echo $block->getUrl('reorder-product/catalog_product/view',['id'=>$_product->getId()]) ?>" href="javascript:void(0);"><span><?php echo __('Quick view')?></span></a>
+								<?php endif ?>
+							</div>
+				        </td>
+						<td>
+							<?php if ($helper->showbtnQuickview() == 'name' && $_product->isVisibleInSiteVisibility()): ?>
+							<a class="reorder-quickview" data-quickview-url="<?php /* @escapeNotVerified */ echo $block->getUrl('reorder-product/catalog_product/view',['id'=>$_product->getId()]) ?>" href="javascript:void(0);"><span><?php /* @escapeNotVerified */ echo $_product->getName(); ?></span></a>
+							<?php else: ?>
+								<?php if ($_product->isVisibleInSiteVisibility()): ?>
+									<a href="<?php /* @escapeNotVerified */ echo $_product->isVisibleInSiteVisibility()? $_product->getProductUrl() : '#'?>" title="<?php /* @escapeNotVerified */ echo $_product->getName(); ?>"><?php /* @escapeNotVerified */ echo $_product->getName(); ?></a>
+								<?php else: ?>
+									<p class="product-name"><span><?php /* @escapeNotVerified */ echo $_product->getName(); ?></span></p>
+								<?php endif ?>
+								
+							<?php endif ?>
+							
+							<?php if ($helper->showSku()): ?>
+							<div class="product-sku-block">
+					        	<span><?php /* @escapeNotVerified */ echo __('SKU') ?>:</span> <?php /* @escapeNotVerified */ echo implode('<br />', $this->helper('Magento\Catalog\Helper\Data')->splitSku($block->escapeHtml($item->getSku()))); ?>
+					    	</div>
+							<?php endif ?>
+							
+						    <?php if ($block->getOrderOptions($item)): ?>
+						        <dl class="item-options">
+						            <?php foreach ($block->getOrderOptions($item) as $_option): ?>
+						                <dt><?php /* @escapeNotVerified */ echo $_option['label'] ?>:</dt>
+						                <dd>
+						                    <?php if (isset($_option['custom_view']) && $_option['custom_view']): ?>
+						                        <?php  echo $block->getCustomizedOptionValue($_option); ?>
+						                    <?php else: ?>
+						                        <?php $_option = $block->getFormattedOption($_option['value']); ?>
+						                        <?php  echo $_option['value']; ?><?php if (isset($_option['remainder']) && $_option['remainder']): ?><span id="<?php /* @escapeNotVerified */ echo $_dots = 'dots' . uniqid()?>"> ...</span><span id="<?php /* @escapeNotVerified */ echo $_id = 'id' . uniqid()?>"><?php /* @escapeNotVerified */ echo $_option['remainder'] ?></span>
+						                        <?php endif; ?>
+						                    <?php endif; ?>
+						                </dd>
+						            <?php endforeach; ?>
+						        </dl>
+						    <?php endif; ?>
+						    <?php if ($item->getProductType() == 'bundle'): ?>
+						    		<?php $options = $item->getProductOptions() ?>
+						    		<dl class="item-options">
+							            <?php foreach ($options['bundle_options'] as $option):?>
+							                <dt style="float: none;"><?php /* @escapeNotVerified */ echo $option['label'] ?></dt>
+							                <?php foreach ($option['value'] as $sub) :?>
+							                    <dd><?php /* @escapeNotVerified */ echo $sub['qty'] . " x " . $sub['title'] . " " . $this->helper('Magento\Framework\Pricing\Helper\Data')->currency($sub['price'],true, false) ?></dd>
+							            <?php endforeach;
+							            endforeach;
+							            ?>
+							        </dl>
+									
+						    <?php endif ?>
+						</td>
+						<td>
+							<?php
+							 echo  $this->helper('Magento\Framework\Pricing\Helper\Data')->currency($item->getPrice(),true, false);
+							?>
+						</td>
+						<td class="qty-reorder">
+							<input type="text" id="qty_<?php /* @escapeNotVerified */ echo $item->getId() ;?>" name="qty_<?php /* @escapeNotVerified */ echo $item->getId() ;?>" value="<?php /* @escapeNotVerified */ echo 
+							$minSaleQty ?>" class="qty-reoderproduct">
+						</td>
+						<td class="qtyordered-reorder">
+							<?php /* @escapeNotVerified */ echo (int)$item->getReoderQtyOrdered();?>
+						</td>
+						<td>
+				
+							<?php /* @escapeNotVerified */ echo date('F j, Y', strtotime($item->getCreatedAt())); ?>
+						</td>
+						<td>
+				
+							<?php if ($stockStatus->getStockStatus()) : ?>
+								<span class="instock"><?php /* @escapeNotVerified */ echo __('In stock') ?>
+									<?php
+									if ($helper->showQtyInventory()) {
+										if($stockStatus->getQty()){
+											echo  '('.(int)$stockStatus->getQty().')';
+										}
+									}
+									?>
+								</span>
+							<?php else: ?>
+								<span class="outstock"><?php /* @escapeNotVerified */ echo __('Out of stock') ?></span>
+							<?php endif; ?>
+						</td>
+						<td class="action-reorder"> 
+						<?php if ($_product->getIsSalable()): ?>
+							<button type="button" title="Add to Cart" class="bt-reoderproduct" data-item-id="<?php /* @escapeNotVerified */ echo $item->getId() ?>" data-url="<?php /* @escapeNotVerified */ echo $block->getUrl('reorder-product/cart/add',['item'=>$item->getId()]); ?>"><span><span><?php /* @escapeNotVerified */ echo __('Add') ?></span></span>
+							</button>
+						<?php endif ?>
+						</td>
+					</tr>
+				<?php else: ?>
+					<tr>
+						<td></td>
+						<td>
+							<div class="image-reoderproduct">
+								<img id="product-collection-image-not-found" class="thumbnail"
+					                    src="<?php /* @escapeNotVerified */ echo $imageHelper->init($_product, 'category_page_list', array('height' => 240 , 'width'=> 240))->getUrl();?>"
+					                    alt="<?php /* @escapeNotVerified */ echo $this->stripTags($this->getImageLabel($_product, 'small_image'), null, true) ?>" title="<?php /* @escapeNotVerified */ echo $_product->getName(); ?>" />
+					        </div>
+						</td>
+						<td>
+							<p class="product-name"><span><?php /* @escapeNotVerified */ echo $item->getName(); ?></span></p>
+							<?php if ($helper->showSku()): ?>
+							<div class="product-sku-block">
+					        	<span><?php /* @escapeNotVerified */ echo __('SKU') ?>:</span> <?php /* @escapeNotVerified */ echo implode('<br />', $this->helper('Magento\Catalog\Helper\Data')->splitSku($block->escapeHtml($item->getSku()))); ?>
+					    	</div>
+							<?php endif ?>
+							
+						    <?php if ($block->getOrderOptions($item)): ?>
+						        <dl class="item-options">
+						            <?php foreach ($block->getOrderOptions($item) as $_option): ?>
+						                <dt><?php /* @escapeNotVerified */ echo $_option['label'] ?>:</dt>
+						                <dd>
+						                    <?php if (isset($_option['custom_view']) && $_option['custom_view']): ?>
+						                        <?php /* @escapeNotVerified */ echo $block->getCustomizedOptionValue($_option); ?>
+						                    <?php else: ?>
+						                        <?php $_option = $block->getFormattedOption($_option['value']); ?>
+						                        <?php /* @escapeNotVerified */ echo $_option['value']; ?><?php if (isset($_option['remainder']) && $_option['remainder']): ?><span id="<?php /* @escapeNotVerified */ echo $_dots = 'dots' . uniqid()?>"> ...</span><span id="<?php /* @escapeNotVerified */ echo $_id = 'id' . uniqid()?>"><?php /* @escapeNotVerified */ echo $_option['remainder'] ?></span>
+						                        <?php endif; ?>
+						                    <?php endif; ?>
+						                </dd>
+						            <?php endforeach; ?>
+						        </dl>
+						    <?php endif; ?>
+						    <?php if ($item->getProductType() == 'bundle'): ?>
+						    		<?php $options = $item->getProductOptions() ?>
+						    		<dl class="item-options">
+							            <?php foreach ($options['bundle_options'] as $option):?>
+							                <dt style="float: none;"><?php /* @escapeNotVerified */ echo $option['label'] ?></dt>
+							                <?php foreach ($option['value'] as $sub) :?>
+							                    <dd><?php /* @escapeNotVerified */ echo $sub['qty'] . " x " . $sub['title'] . " " . $this->helper('Magento\Framework\Pricing\Helper\Data')->currency($sub['price'],true, false) ?></dd>
+							            <?php endforeach;
+							            endforeach;
+							            ?>
+							        </dl>
+									
+						    <?php endif ?>
+						    <p class="message error"><span><?php /* @escapeNotVerified */ echo "This product doesn't exist !";?></span></p>
+						</td>
+						<td>
+							<?php echo $this->helper('Magento\Framework\Pricing\Helper\Data')->currency($item->getPrice(),true, false);
+							?>
+						</td>
+						<td class="qty-reorder">
+						</td>
+						<td class="qtyordered-reorder">
+							<?php /* @escapeNotVerified */ echo (int)$item->getReoderQtyOrdered();?>
+						</td>
+						<td>
+							<?php /* @escapeNotVerified */ echo date('F j, Y', strtotime($item->getCreatedAt())); ?>
+						</td>
+						<td></td>
+						<td></td>
+					</tr>
+				<?php //endif ?>
+				<?php endif ?>
+			<?php endforeach ?>
+        </tbody>
+    </table>
+    </div>
+	<div class="action-reorder-last">
+		<button type="button" id="add-all-to-cart-reorder" class="bt-reoderproduct" data-url="<?php /* @escapeNotVerified */ echo $block->getUrl('reorder-product/cart/add/'); ?>"><?php /* @escapeNotVerified */ echo __('Add all to Cart') ?></button>
+		<?php if ($helper->showbtnWishlist()): ?>
+		<button type="button" id="add-all-to-wishlist-reorder" class="bt-reoderproduct" data-url="<?php /* @escapeNotVerified */ echo $block->getUrl('reorder-product/wishlist/add/'); ?>"><?php /* @escapeNotVerified */ echo __('Add all to Wishlist') ?></button>
+		<?php endif ?>
+	</div>
+	
+</form>
+<script type="text/x-magento-init">
+    {
+        "*": {
+            "Bss_ReorderProduct/js/reorder": {
+                "listItem": [<?php  echo '"'.implode('","', $checked).'"' ?>],
+                "lengthMenuKey": [<?php  echo '"'.implode('","', array_keys($block->getListperpagevalue())).'"' ?>],
+                "lengthMenuValue": [<?php echo '"'.implode('","', $block->getListperpagevalue()).'"' ?>],
+                "pageLength": <?php echo $block->getListperpage() ?>,
+                "ordersort": <?php echo $block->getOrderDefault() ?>,
+                "showcolumns": [<?php echo  $helper->showColumns() ?>],
+                "urlUpdateCart": "<?php echo $block->getUrl('reorder-product/index/updatecart') ?>",
+                "urlRedirectToCart": "<?php echo $helper->isRedirecttocart()? $block->getUrl('checkout/cart') : '' ?>",
+                "urlRedirectToWishlist": "<?php echo $helper->isRedirecttowishlist()? $block->getUrl('wishlist') : '' ?>"
+            }
+        }
+    }
+</script>

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+		<section id="tpb_quickreorder" translate="label" type="text" sortOrder="1000" showInDefault="1" showInWebsite="1" showInStore="1">
+			<label>Quick Reorder</label>
+			<tab>customer</tab>
+			<resource>TPB_QuickReorder::config</resource>
+			<group id="general" sortOrder="10" translate="label" type="text" showInDefault="1" showInStore="1" showInWebsite="1">
+				<label>General Options</label>
+                <field id="active" translate="label" type="select" sortOrder="10" showInDefault="10" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Enabled</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment><![CDATA[Choose 'Yes' to enable module.]]></comment>
+                </field>
+				<field id="title" translate="label comment" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Title</label>
+                </field>
+				<field id="product_per_page" translate="label comment" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1" canRestore="1">
+                    <label>Products per Page on List</label>
+                    <comment>Must be in the allowed values list</comment>
+                </field>
+				<field id="customer_group" translate="label" type="multiselect" sortOrder="40" showInDefault="1" showInWebsite="1">
+                    <label>Show for Customer Groups</label>
+                    <depends>
+                        <field id="quickorder_active">1</field>
+                    </depends>
+                    <source_model>TPB\QuickReorder\Model\Config\Source\CustomerGroups</source_model>
+                    <comment><![CDATA[Select the customer groups that can view the quick reorder page.]]></comment>
+                </field>
+            </group>
+        </section>
+    </system>
+</config>

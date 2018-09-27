@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+    <default>
+        <tpb_quickreorder>
+            <general>
+                <active>1</active>
+                <title>Quick Reorder</title>
+                <product_per_page>10</product_per_page>
+                <customer_group>8</customer_group>
+            </general>
+        </tpb_quickreorder>
+    </default>
+</config>
