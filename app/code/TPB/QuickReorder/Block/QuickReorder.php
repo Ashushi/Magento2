@@ -1,15 +1,15 @@
 <?php
 namespace TPB\QuickReorder\Block;
 
-use Magento\Framework\App\ObjectManager;
-use Magento\Sales\Model\ResourceModel\Order\CollectionFactoryInterface;
 use Magento\Framework\View\Element\Template\Context;
-use Magento\Sales\Model\ResourceModel\Order\CollectionFactory;
 use Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory as ItemCollectionFactory;
 use Magento\Customer\Model\Session;
 use Magento\Sales\Model\Order\Config as OrderConfig;
 use Magento\Catalog\Model\ProductFactory;
-use Magento\ConfigurableProduct\Model\ResourceModel\Product\Type\Configurable;
+use Magento\ConfigurableProduct\Model\Product\Type\Configurable;
+use Magento\Sales\Model\ResourceModel\Order\Collection;
+use Magento\Sales\Api\OrderRepositoryInterface;
+use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\View\Element\Template;
 use Magento\Theme\Block\Html\Pager;
 use TPB\QuickReorder\Model\Config;
@@ -19,11 +19,6 @@ use TPB\QuickReorder\Model\Config;
  */
 class QuickReorder extends Template
 {
-    /**
-     * @var CollectionFactory
-     */
-    private $orderCollectionFactory;
-
     /**
      * @var Session
      */
@@ -40,7 +35,7 @@ class QuickReorder extends Template
     private $config;
 
     /**
-     * @var \Magento\Sales\Model\ResourceModel\Order\Collection
+     * @var Collection
      */
     private $orders;
 
@@ -60,45 +55,68 @@ class QuickReorder extends Template
     private $productTypeConfigurable;
 
     /**
+     * @var OrderRepositoryInterface
+     */
+    private $orderRepository;
+
+    /**
+     * @var SearchCriteriaBuilder
+     */
+    private $searchCriteriaBuilder;
+
+    /**
      * @param Context $context
-     * @param CollectionFactory $orderCollectionFactory
      * @param ItemCollectionFactory $itemCollectionFactory
      * @param Session $customerSession
      * @param OrderConfig $orderConfig
      * @param ProductFactory $productloader
      * @param Config $config
      * @param Configurable $productTypeConfigurable
+     * @param OrderRepositoryInterface $orderRepository
+     * @param SearchCriteriaBuilder $searchCriteriaBuilder
      * @param array $data
      */
     public function __construct(
         Context $context,
-        CollectionFactory $orderCollectionFactory,
         ItemCollectionFactory $itemCollectionFactory,
         Session $customerSession,
         OrderConfig $orderConfig,
         ProductFactory $productloader,
         Config $config,
         Configurable $productTypeConfigurable,
+        OrderRepositoryInterface $orderRepository,
+        SearchCriteriaBuilder $searchCriteriaBuilder,
         array $data = []
     ) {
-        $this->orderCollectionFactory = $orderCollectionFactory;
         $this->itemCollectionFactory = $itemCollectionFactory;
         $this->customerSession = $customerSession;
         $this->orderConfig = $orderConfig;
         $this->productloader = $productloader;
         $this->config = $config;
         $this->productTypeConfigurable = $productTypeConfigurable;
+        $this->orderRepository = $orderRepository;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         parent::__construct($context, $data);
     }
 
     /**
-     * Retrieve a list of ordered products
+     * @return void
      */
     protected function _construct()
     {
         parent::_construct();
         $this->pageConfig->getTitle()->set(__($this->config->getTitle()));
+    }
+
+    /**
+     * Retrieve a list of ordered products
+     * 
+     * @return bool|Collection
+     */
+    public function getOrderedItems()
+    {
         $product_name = trim($this->getRequest()->getParam('product_name'));
+        $p = ($this->getRequest()->getParam('p')) ? $this->getRequest()->getParam('p') : 1;
         $_orders = $this->getOrders();
         $_orderids = [];
         foreach ($_orders as $_order) {
@@ -114,6 +132,7 @@ class QuickReorder extends Template
                 )
             );
         }
+        $collection->setPageSize($this->config->getListperpage())->setCurPage($p);
         $collection->addFieldToFilter('order_id', ['in' => $_orderids])
                    ->addFieldToFilter('product_type', 'simple')
                    ->getSelect()
@@ -122,11 +141,11 @@ class QuickReorder extends Template
                    ->columns('SUM(qty_ordered) as total_qty')
                    ->group('main_table.product_id')
                    ->order(array('total_qty DESC', 'name ASC'));
-        $this->setCollection($collection);
+        return $collection;
     }
 
-	/**
-     * @return bool|\Magento\Sales\Model\ResourceModel\Order\Collection
+    /**
+     * @return bool|Collection
      */
     public function getOrders()
     {
@@ -134,28 +153,10 @@ class QuickReorder extends Template
             return false;
         }
         if (!$this->orders) {
-            $this->orders = $this->getOrderCollectionFactory()->create($customerId)->addFieldToSelect(
-                '*'
-            )->addFieldToFilter(
-                'status',
-                ['in' => $this->orderConfig->getVisibleOnFrontStatuses()]
-            )->setOrder(
-                'created_at',
-                'desc'
-            );
+            $searchCriteria = $this->searchCriteriaBuilder->addFilter('status', $this->orderConfig->getVisibleOnFrontStatuses(), 'in')->create();
+            $this->orders = $this->orderRepository->getList($searchCriteria);
         }
         return $this->orders;
-    }
-
-    /**
-     * @return bool|\Magento\Sales\Model\ResourceModel\Order\Collection
-     */
-    private function getOrderCollectionFactory()
-    {
-        if ($this->orderCollectionFactory === null) {
-            $this->orderCollectionFactory = ObjectManager::getInstance()->get(CollectionFactoryInterface::class);
-        }
-        return $this->orderCollectionFactory;
     }
 
     /**
@@ -164,15 +165,15 @@ class QuickReorder extends Template
     protected function _prepareLayout()
     {
         parent::_prepareLayout();
-        if ($this->getCollection()) {
+        if ($this->getOrderedItems()) {
             $pager = $this->getLayout()->createBlock(
                 Pager::class, 'quick.reorder.pager'
             )->setAvailableLimit(array($this->config->getListperpage() => $this->config->getListperpage()))
             ->setCollection(
-                $this->getCollection()
+                $this->getOrderedItems()
             );
             $this->setChild('pager', $pager);
-            $this->getCollection()->load();
+            $this->getOrderedItems()->load();
         }
         return $this;
     }

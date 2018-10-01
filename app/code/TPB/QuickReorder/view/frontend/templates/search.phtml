@@ -1,5 +1,5 @@
 <?php
-$items = $block->getCollection();
+$items = $block->getOrderedItems();
 $imageHelper = $this->helper('Magento\Catalog\Helper\Image');
 ?>
 <?php if ($block->getPagerHtml()): ?>
@@ -20,7 +20,7 @@ $imageHelper = $this->helper('Magento\Catalog\Helper\Image');
             </thead>
             <tbody>
         <?php if ($items->getSize()) {
-                foreach ($items as $item) {
+                foreach ($items as $item):
                     $productId = $item->getProductId();
                     $_product = $block->getProductById($productId);
                     $parentId = $block->getParentId($productId);
@@ -57,7 +57,7 @@ $imageHelper = $this->helper('Magento\Catalog\Helper\Image');
                         </td>
                     </tr>
                 <?php
-                }
+                endforeach;
             } else { ?>
                 <tr>
                     <td colspan="6">No Record Found</td>

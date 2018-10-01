@@ -7,6 +7,9 @@ use Magento\Customer\Api\GroupManagementInterface;
 use Magento\Customer\Api\GroupRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 
+/**
+ * Used to retrieve customer group list.
+ */
 class CustomerGroups implements OptionSourceInterface
 {
     /**
@@ -42,7 +45,7 @@ class CustomerGroups implements OptionSourceInterface
     /**
      * Get an array of customer groups
      *
-     * @return array
+     * @return string[] of customer group codes, indexed by their ID
      * @throws \Magento\Framework\Exception\LocalizedException
      * @throws \Magento\Framework\Exception\NoSuchEntityException
      */

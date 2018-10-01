@@ -1,6 +1,6 @@
-<?php /** @var $block \TPB\QuickReorder\Block\QuickReorder */ ?>
+<?php /** @var \TPB\QuickReorder\Block\QuickReorder $block */ ?>
 <?php
-$items = $block->getCollection();
+$items = $block->getOrderedItems();
 $imageHelper = $this->helper('Magento\Catalog\Helper\Image');
 $cartUrl = $block->getUrl('checkout/cart', ['_secure' => true]);
 ?>
@@ -38,7 +38,7 @@ $cartUrl = $block->getUrl('checkout/cart', ['_secure' => true]);
                 </thead>
                 <tbody>
             <?php if ($items->getSize()) {
-                    foreach ($items as $item) {
+                    foreach ($items as $item):
                         $productId = $item->getProductId();
                         $_product = $block->getProductById($productId);
                         $parentId = $block->getParentId($productId);
@@ -75,12 +75,12 @@ $cartUrl = $block->getUrl('checkout/cart', ['_secure' => true]);
                             </td>
                         </tr>
                     <?php
-                    }
+                    endforeach;
                 } else { ?>
-					<tr>
-						<td colspan="6">No Record Found</td>
-					</tr>
-				<?php } ?>
+                    <tr>
+                        <td colspan="6">No Record Found</td>
+                    </tr>
+                <?php } ?>
                 </tbody>
             </table>
         </div>

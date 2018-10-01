@@ -38,25 +38,25 @@ class Config
         $result = $this->getConfigValue(static::CONFIG_XML_PATH_CUSTOMER_GROUP, $store, $scope);
         return $result === null ? [] : explode(',', $result);
     }
-    
+
     /**
-     * Retrieve a title 
+     * Retrieve a title
      *
      * @param string|null $store
      * @param string $scope
-     * @return array
+     * @return string|null
      */
     public function getTitle($store = null, $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT)
     {
         return $this->getConfigValue(static::CONFIG_XML_PATH_TITLE, $store, $scope);
     }
-    
+
     /**
-     * Retrieve Product per page 
+     * Retrieve Product per page
      *
      * @param string|null $store
      * @param string $scope
-     * @return array
+     * @return string|null
      */
     public function getListperpage($store = null, $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT)
     {
@@ -69,9 +69,9 @@ class Config
      * @param string $path
      * @param string $scopeId
      * @param string $scope
-     * @return mixed
+     * @return string|null
      */
-    public function getConfigValue($path, $scopeId, $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT)
+    private function getConfigValue($path, $scopeId, $scope = ScopeConfigInterface::SCOPE_TYPE_DEFAULT)
     {
         return $this->scopeConfig->getValue($path, $scope, $scopeId);
     }

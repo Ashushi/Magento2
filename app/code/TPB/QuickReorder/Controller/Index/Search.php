@@ -5,6 +5,9 @@ use Magento\Framework\App\Action\Context;
 use Magento\Framework\View\Result\PageFactory;
 use Magento\Framework\App\Action\Action;
 
+/**
+ * Controller For search and pagination
+ */
 class Search extends Action
 {
     /**
@@ -27,15 +30,15 @@ class Search extends Action
     /**
      * Renders Quick Reorder search and pagination
      *
-     * @return \Magento\Framework\View\Result\LayoutFactory
+     * @return void
      */
     public function execute()
-	{
-		$resultPage = $this->resultPageFactory->create();
+    {
+        $resultPage = $this->resultPageFactory->create();
         $block = $resultPage->getLayout()
                 ->createBlock('TPB\QuickReorder\Block\QuickReorder')
                 ->setTemplate('TPB_QuickReorder::search.phtml')
                 ->toHtml();
         $this->getResponse()->setBody($block);
-	}
+    }
 }

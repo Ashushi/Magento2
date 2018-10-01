@@ -7,6 +7,8 @@ use Magento\Checkout\Model\Cart as CustomerCart;
 use Magento\Catalog\Model\ProductFactory;
 use Magento\Framework\Escaper;
 use Magento\Framework\App\Action\Action;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Serialize\Serializer\Json;
 
 /**
  * Used to add products into cart
@@ -17,7 +19,7 @@ class Add extends Action
      * @var CheckoutSession
      */
     private $checkoutSession;
-    
+
     /**
      * @var CustomerCart
      */
@@ -34,64 +36,73 @@ class Add extends Action
     private $escaper;
 
     /**
+     * @var Json
+     */
+    private $serializer;
+
+    /**
      * @param Context $context
      * @param CheckoutSession $checkoutSession
-     * @param ProductFactory $ProductFactory
+     * @param ProductFactory $productFactory
      * @param CustomerCart $cart
      * @param Escaper $escaper
+     * @param Json $serializer
      */
     public function __construct(
         Context $context,
         CheckoutSession $checkoutSession,
         ProductFactory $productFactory,
         CustomerCart $cart,
-        Escaper $escaper
+        Escaper $escaper,
+        Json $serializer
     ) {
         $this->checkoutSession = $checkoutSession;
         $this->productFactory = $productFactory;
         $this->cart = $cart;
         $this->escaper = $escaper;
+        $this->serializer = $serializer;
         parent::__construct($context);
     }
 
     /**
      * Add product to shopping cart action
+     * 
+     * @return void
      */
     public function execute()
     {
-        $resultRedirect = $this->resultRedirectFactory->create();
         $params = $this->getRequest()->getParams();
-
         $addedProducts = $result = [];
         $result['status'] = '';
+        $items = $this->serializer->unserialize($params['item']);
+        if (count($items)) {
+            foreach ($items as $item) {
+                try {
+                    $itemId = $item['id'];
+                    $parentId = $item['parentId'];
+                    $qty = $item['qty'];
+                    if ($qty <= 0) {
+                        continue;
+                    }
+                    $this->addOrderItem($itemId, $parentId, $qty);
 
-        foreach (json_decode($params['item']) as $item) {
-            try {
-                $itemId = $item->id;
-                $parentId = $item->parentId;
-                $qty = $item->qty;
-                if ($qty <= 0) {
-                    continue;
+                    $addedProducts[] = $itemId;
+                } catch (LocalizedException $e) {
+                    if ($this->checkoutSession->getUseNotice(true)) {
+                        $this->messageManager->addNoticeMessage($e->getMessage());
+                    } else {
+                        $this->messageManager->addErrorMessage($e->getMessage());
+                    }
+                    $result['status'] = 'ERROR';
+                } catch (\Exception $e) {
+                    $this->messageManager->addExceptionMessage($e, __('We can\'t add this item to your shopping cart right now.'));
+                    $result['status'] = 'ERROR';
                 }
-                $this->addOrderItem($itemId, $parentId, $qty);
-
-                $addedProducts[] = $itemId;
-            } catch (\Magento\Framework\Exception\LocalizedException $e) {
-                if ($this->checkoutSession->getUseNotice(true)) {
-                    $this->messageManager->addNotice($e->getMessage());
-                } else {
-                    $this->messageManager->addError($e->getMessage());
-                }
-                $result['status'] = 'ERROR';
-            } catch (\Exception $e) {
-                $this->messageManager->addException($e, __('We can\'t add this item to your shopping cart right now.'));
-                $result['status'] = 'ERROR';
             }
+            $result['type'] = 'cart';
+            $result['status'] = $this->saveCart($result['status'], $addedProducts);
         }
-
-        $result['type'] = 'cart';
-        $result['status'] = $this->saveCart($addedProducts, $result['status']);
-        $this->getResponse()->setBody(json_encode($result));
+        $this->getResponse()->setBody($this->serializer->serialize($result));
     }
 
     /**
@@ -101,26 +112,26 @@ class Add extends Action
      * @param string $result
      * @return string
      */
-    private function saveCart($addedProducts = null, $result)
+    private function saveCart($result, $addedProducts = null)
     {
         if ($addedProducts) {
             try {
                 $this->cart->save()->getQuote()->collectTotals();
                 if (!$this->cart->getQuote()->getHasError()) {
-                    $this->messageManager->addSuccess(
+                    $this->messageManager->addSuccessMessage(
                         __('%1 product(s) have been added to shopping cart', count($addedProducts))
                     );
                     $result = 'SUCCESS';
                 }
-            } catch (\Magento\Framework\Exception\LocalizedException $e) {
+            } catch (LocalizedException $e) {
                 if ($this->checkoutSession->getUseNotice(true)) {
-                    $this->messageManager->addNotice(
+                    $this->messageManager->addNoticeMessage(
                         $this->escaper->escapeHtml($e->getMessage())
                     );
                 } else {
                     $errormessage = array_unique(explode("\n", $e->getMessage()));
                     $errormessageCart = end($errormessage);
-                    $this->messageManager->addError(
+                    $this->messageManager->addErrorMessage(
                         $this->escaper->escapeHtml($errormessageCart)
                     );
                 }
@@ -162,8 +173,8 @@ class Add extends Action
             } else {
                 $this->cart->addProduct($_product, $cartParams);
             }
-        } catch(\Exception $e) {
-            $this->messageManager->addException($e, __('We can\'t add this item to your shopping cart right now.'));
+        } catch (\Exception $e) {
+            $this->messageManager->addExceptionMessage($e, __('We can\'t add this item to your shopping cart right now.'));
         }
         return $this;
     }
