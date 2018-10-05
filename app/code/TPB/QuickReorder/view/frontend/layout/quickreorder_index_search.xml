@@ -3,10 +3,9 @@
     <update handle="customer_account"/>
     <body>
         <referenceContainer name="content">
-            <block class="TPB\QuickReorder\Block\QuickReorder" name="reorder.product" cacheable="false" ifconfig="tpb_quickreorder/general/active" template="quickreorder.phtml">
+            <block class="TPB\QuickReorder\Block\QuickReorder" name="reorder.product.search" cacheable="false" ifconfig="tpb_quickreorder/general/active" template="search.phtml">
                 <block class="Magento\Theme\Block\Html\Pager" name="quick.reorder.pager"/>
             </block>
-            <block class="Magento\Customer\Block\Account\Dashboard" name="customer.account.link.back" template="account/link/back.phtml"/>
         </referenceContainer>
     </body>
 </page>

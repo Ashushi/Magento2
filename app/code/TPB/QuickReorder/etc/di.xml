@@ -6,11 +6,14 @@
     <type name="TPB\QuickReorder\Block\QuickReorder">
         <arguments>
             <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
-         </arguments>
+        </arguments>
     </type>
     <type name="TPB\QuickReorder\Controller\Cart\Add">
         <arguments>
             <argument name="checkoutSession" xsi:type="object">Magento\Checkout\Model\Session\Proxy</argument>
-         </arguments>
+        </arguments>
+        <arguments>
+            <argument name="customerSession" xsi:type="object">Magento\Customer\Model\Session\Proxy</argument>
+        </arguments>
     </type>
 </config>

@@ -3,7 +3,6 @@
 namespace TPB\QuickReorder\Plugin;
 
 use Magento\Customer\Model\Session as CustomerSession;
-use TPB\QuickReorder\Controller\Index\Index;
 use Magento\Framework\Exception\NotFoundException;
 use Magento\Framework\Controller\Result\Redirect;
 use TPB\QuickReorder\Controller\Index\Index;
@@ -39,7 +38,7 @@ class CheckIfCustomerGroupAllowedPlugin
     /**
      * Redirect to 404 page if the customer group they are assigned to is not allowed to view the quick reorder page
      *
-     * @see Index::execute()
+     * @see \TPB\QuickReorder\Controller\Index\Index::execute()
      * @param Index $subject
      * @param callable $proceed
      * @param mixed ...$args

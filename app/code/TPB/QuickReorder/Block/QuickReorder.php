@@ -11,7 +11,6 @@ use Magento\Sales\Model\ResourceModel\Order\Collection;
 use Magento\Sales\Api\OrderRepositoryInterface;
 use Magento\Framework\Api\SearchCriteriaBuilder;
 use Magento\Framework\View\Element\Template;
-use Magento\Theme\Block\Html\Pager;
 use TPB\QuickReorder\Model\Config;
 
 /**
@@ -100,17 +99,8 @@ class QuickReorder extends Template
     }
 
     /**
-     * @return void
-     */
-    protected function _construct()
-    {
-        parent::_construct();
-        $this->pageConfig->getTitle()->set(__($this->config->getTitle()));
-    }
-
-    /**
      * Retrieve a list of ordered products
-     * 
+     *
      * @return bool|Collection
      */
     public function getOrderedItems()
@@ -165,16 +155,12 @@ class QuickReorder extends Template
     protected function _prepareLayout()
     {
         parent::_prepareLayout();
-        if ($this->getOrderedItems()) {
-            $pager = $this->getLayout()->createBlock(
-                Pager::class, 'quick.reorder.pager'
-            )->setAvailableLimit(array($this->config->getListperpage() => $this->config->getListperpage()))
-            ->setCollection(
-                $this->getOrderedItems()
-            );
-            $this->setChild('pager', $pager);
-            $this->getOrderedItems()->load();
-        }
+        $listperpage = $this->config->getListperpage();
+        $pager = $this->getLayout()->getBlock('quick.reorder.pager')
+                      ->setAvailableLimit(array($listperpage => $listperpage))
+                      ->setCollection($this->getOrderedItems());
+        $this->setChild('pager', $pager);
+        $this->getOrderedItems()->load();
         return $this;
     }
 

@@ -73,7 +73,7 @@ define([
         _UpdateTable: function (pageno, name) {
             var $widget = this, loader = this.options.loader;
             $.ajax({
-                type:"get", 
+                type:"get",
                 url:'/quick-reorder/index/search?p='+pageno+'&product_name='+name,
                 beforeSend: function() {
                     $(loader).show();
@@ -256,7 +256,7 @@ define([
                     data = {
                         item: sessionStorage.getItem('item_reorder')
                     };
-                }              
+                }
                 $widget._SendAjax($this, url, data)
             } else {
                  $(loader).hide();

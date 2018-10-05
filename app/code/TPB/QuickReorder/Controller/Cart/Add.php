@@ -3,12 +3,18 @@ namespace TPB\QuickReorder\Controller\Cart;
 
 use Magento\Framework\App\Action\Context;
 use Magento\Checkout\Model\Session as CheckoutSession;
-use Magento\Checkout\Model\Cart as CustomerCart;
-use Magento\Catalog\Model\ProductFactory;
-use Magento\Framework\Escaper;
-use Magento\Framework\App\Action\Action;
+use Magento\Customer\Model\Session as CustomerSession;
+use Magento\Customer\Api\CustomerRepositoryInterface;
+use Magento\Catalog\Api\ProductRepositoryInterface;
+use Magento\Quote\Api\CartRepositoryInterface;
+use Magento\Quote\Api\CartManagementInterface;
+use Magento\Store\Model\StoreManagerInterface;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Serialize\Serializer\Json;
+use Magento\Quote\Api\Data\CartInterface;
+use Magento\Framework\App\Action\Action;
+use Magento\Framework\DataObject;
+use Magento\Framework\Escaper;
 
 /**
  * Used to add products into cart
@@ -21,14 +27,44 @@ class Add extends Action
     private $checkoutSession;
 
     /**
-     * @var CustomerCart
+     * @var CustomerSession
      */
-    private $cart;
+    private $customerSession;
 
     /**
-     * @var ProductFactory
+     * @var CustomerRepositoryInterface
      */
-    private $productFactory;
+    private $customerRepository;
+
+    /**
+     * @var ProductRepositoryInterface
+     */
+    private $productRepository;
+
+    /**
+     * @var CartRepositoryInterface
+     */
+    private $cartRepository;
+
+    /**
+     * @var CartManagementInterface
+     */
+    private $cartManagement;
+
+    /**
+     * @var CartInterface
+     */
+    private $quote;
+
+    /**
+     * @var StoreManagerInterface
+     */
+    private $storeManager;
+
+    /**
+     * @var DataObject
+     */
+    private $dataObject;
 
     /**
      * @var Escaper
@@ -43,22 +79,37 @@ class Add extends Action
     /**
      * @param Context $context
      * @param CheckoutSession $checkoutSession
-     * @param ProductFactory $productFactory
-     * @param CustomerCart $cart
+     * @param CustomerSession $customerSession
+     * @param CustomerRepositoryInterface $customerRepository
+     * @param ProductRepositoryInterface $productRepository
+     * @param CartRepositoryInterface $cartRepository
+     * @param CartManagementInterface $cartManagement
+     * @param StoreManagerInterface $storeManager
+     * @param DataObject $dataObject
      * @param Escaper $escaper
      * @param Json $serializer
      */
     public function __construct(
         Context $context,
         CheckoutSession $checkoutSession,
-        ProductFactory $productFactory,
-        CustomerCart $cart,
+        CustomerSession $customerSession,
+        CustomerRepositoryInterface $customerRepository,
+        ProductRepositoryInterface $productRepository,
+        CartRepositoryInterface $cartRepository,
+        CartManagementInterface $cartManagement,
+        StoreManagerInterface $storeManager,
+        DataObject $dataObject,
         Escaper $escaper,
         Json $serializer
     ) {
         $this->checkoutSession = $checkoutSession;
-        $this->productFactory = $productFactory;
-        $this->cart = $cart;
+        $this->customerSession = $customerSession;
+        $this->customerRepository = $customerRepository;
+        $this->productRepository = $productRepository;
+        $this->cartRepository = $cartRepository;
+        $this->cartManagement = $cartManagement;
+        $this->storeManager = $storeManager;
+        $this->dataObject = $dataObject;
         $this->escaper = $escaper;
         $this->serializer = $serializer;
         parent::__construct($context);
@@ -66,7 +117,7 @@ class Add extends Action
 
     /**
      * Add product to shopping cart action
-     * 
+     *
      * @return void
      */
     public function execute()
@@ -76,6 +127,13 @@ class Add extends Action
         $result['status'] = '';
         $items = $this->serializer->unserialize($params['item']);
         if (count($items)) {
+            $store = $this->storeManager->getStore();
+            $quoteId = $this->checkoutSession->getQuoteId();
+            $cartId = isset($quoteId) ? $quoteId : $this->cartManagement->createEmptyCart();
+            $this->quote = $this->cartRepository->get($cartId);
+            $this->quote->setStore($store);
+            $customer = $this->customerRepository->getById($this->customerSession->getCustomerId());
+            $this->quote->assignCustomer($customer);
             foreach ($items as $item) {
                 try {
                     $itemId = $item['id'];
@@ -95,7 +153,7 @@ class Add extends Action
                     }
                     $result['status'] = 'ERROR';
                 } catch (\Exception $e) {
-                    $this->messageManager->addExceptionMessage($e, __('We can\'t add this item to your shopping cart right now.'));
+                    $this->messageManager->addExceptionMessage($e, __('We can\'t add this item to your shopping cart right now.')->render());
                     $result['status'] = 'ERROR';
                 }
             }
@@ -114,12 +172,12 @@ class Add extends Action
      */
     private function saveCart($result, $addedProducts = null)
     {
-        if ($addedProducts) {
+        if ($addedProducts && $result != 'ERROR') {
             try {
-                $this->cart->save()->getQuote()->collectTotals();
-                if (!$this->cart->getQuote()->getHasError()) {
+                $this->quote->collectTotals()->save();
+                if (!$this->quote->getHasError()) {
                     $this->messageManager->addSuccessMessage(
-                        __('%1 product(s) have been added to shopping cart', count($addedProducts))
+                        __('%1 product(s) have been added to shopping cart', count($addedProducts))->render()
                     );
                     $result = 'SUCCESS';
                 }
@@ -153,28 +211,26 @@ class Add extends Action
     {
         $cartParams = array();
         $cartParams['qty'] = $qty;
-        try {
-            $_product = $this->productFactory->create()->load($productId);
-            if ($parentId) {
-                $_parentProduct = $this->productFactory->create()->load($parentId);
-                if ($_parentProduct->getTypeId() === 'configurable') {
-                    $productAttributes = $_parentProduct->getTypeInstance(true)->getConfigurableAttributesAsArray($_parentProduct);
-                    $superAttributeArr = array();
-                    foreach ($productAttributes as $val) {
-                        $att_code = $val['attribute_code'];
-                        $att_id = $val['attribute_id'];
-                        $option_val = $_product->getData($att_code);
-                        $superAttributeArr[$att_id] = $option_val;
-                    }
-                    $cartParams['product_id'] = $parentId;
-                    $cartParams['super_attribute'] = $superAttributeArr;
-                    $this->cart->addProduct($_parentProduct, $cartParams);
+        $_product = $this->productRepository->getById($productId);
+        if ($parentId) {
+            $_parentProduct = $this->productRepository->getById($parentId);
+            if ($_parentProduct->getTypeId() === 'configurable') {
+                $productAttributes = $_parentProduct->getTypeInstance(true)->getConfigurableAttributesAsArray($_parentProduct);
+                $superAttributeArr = array();
+                foreach ($productAttributes as $val) {
+                    $att_code = $val['attribute_code'];
+                    $att_id = $val['attribute_id'];
+                    $option_val = $_product->getData($att_code);
+                    $superAttributeArr[$att_id] = $option_val;
                 }
-            } else {
-                $this->cart->addProduct($_product, $cartParams);
+                $cartParams['product_id'] = $parentId;
+                $cartParams['super_attribute'] = $superAttributeArr;
+                $params = $this->dataObject->setData($cartParams);
+                $this->quote->addProduct($_parentProduct, $params);
             }
-        } catch (\Exception $e) {
-            $this->messageManager->addExceptionMessage($e, __('We can\'t add this item to your shopping cart right now.'));
+        } else {
+            $params = $this->dataObject->setData($cartParams);
+            $this->quote->addProduct($_product, $params);
         }
         return $this;
     }
